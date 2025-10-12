@@ -14,9 +14,21 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@primevue/themes": "^4.4.1",
+    "@sendgrid/mail": "^8.1.6",
+    "axios": "^1.12.2",
     "body-parser": "^2.2.0",
     "bootstrap": "^5.3.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "firebase": "^12.4.0",
+    "firebase-admin": "^13.5.0",
+    "firebase-functions": "^6.5.0",
+    "mailgun-js": "^0.22.0",
+    "multer": "^2.0.2",
+    "primeicons": "^7.0.0",
+    "primevue": "^4.4.1",
     "vue": "^3.5.20",
     "vue-router": "^4.5.1"
   },
@@ -30,5 +42,18 @@
     "prettier": "3.6.2",
     "vite": "^7.0.6",
     "vite-plugin-vue-devtools": "^8.0.0"
-  }
+  },
+  "description": "This template should help get you started developing with Vue 3 in Vite.",
+  "main": "eslint.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kaichen6666/fit5032-kc-34666346-A1.3.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kaichen6666/fit5032-kc-34666346-A1.3/issues"
+  },
+  "homepage": "https://github.com/kaichen6666/fit5032-kc-34666346-A1.3#readme"
 }

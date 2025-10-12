@@ -1,80 +1,28 @@
 <script setup>
-import { ref } from 'vue'
-import Home from './components/Home.vue'
-import Login from './components/Login.vue'
-import Form from './components/Form.vue'
-import UserHome from './components/UserHome.vue'
-import AdminHome from './components/AdminHome.vue'
-
-
-
-// currentpage：'home' | 'login' | 'register' | 'userHome' | 'adminHome'
-const currentPage = ref('home')
-// login type：'user' | 'admin'
-const loginType = ref(null)
-// current user
-const currentUser = ref(null) 
-
-
-
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import BHeader from './components/BHeader.vue'
 
 // 
-const goTo = (page, type = null) => {
-  currentPage.value = page
-  if (page === 'login') loginType.value = type
-}
+const route = useRoute()
+const showHeader = computed(() => route.name !== 'CountBookAPI')
 
-
-// login successfully
-const loginSuccess = (payload) => {
-  // payload = { username: 'xxx', type: 'user' | 'admin' }
-  loginType.value = payload.type
-  currentUser.value = payload.username
-  currentPage.value = payload.type === 'admin' ? 'adminHome' : 'userHome'
-}
 </script>
 
 <template>
-  <main class="container mt-5">
-    <!-- home -->
-    <Home
-      v-if="currentPage === 'home'"
-      @go-login="goTo('login', $event)"
-      @go-register="goTo('register')"
-    />
+  <div class="main-container"> 
+    <header v-if="showHeader">
+      <BHeader />
+      <nav>
+        <router-link to="/">Home</router-link> |
+        <router-link to="/about">About</router-link>
+      </nav>
+    </header>
 
-    <!-- login -->
-    <Login
-      v-else-if="currentPage === 'login'"
-      :loginType="loginType"
-      @go-home="goTo('home')"
-      @go-register="goTo('register')"
-      @login-success="loginSuccess"
-    />
-
-    <!-- register -->
-    <Form
-      v-else-if="currentPage === 'register'"
-      @go-home="goTo('home')"
-      @go-login="goTo('login')"
-    />
-
-
-
-    <!-- userhome -->
-<UserHome 
- v-else-if="currentPage === 'userHome'" 
-  :current-user="currentUser"
- @logout="goTo('home')"
- @go-home="goTo('home')"
-/>
-
-<!-- admin -->
-<AdminHome 
-  v-else-if="currentPage === 'adminHome'" 
-  @logout="goTo('home')"
-/>
-  </main>
+    <main class="main-box">
+      <router-view></router-view>
+    </main>
+  </div>
 </template>
 
 <style scoped>
