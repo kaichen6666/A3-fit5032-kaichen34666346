@@ -6,6 +6,9 @@
       and resources to our community.
     </p>
 
+    <!-- ==========================
+         Contact Email Form
+    =========================== -->
     <h2>📧 Contact Us via Email</h2>
     <form @submit.prevent="sendEmail" class="email-form">
       <input
@@ -23,35 +26,133 @@
         {{ sending ? "Sending..." : "Send Email" }}
       </button>
     </form>
+
+    <!-- ==========================
+         Interactive Tables Section
+    =========================== -->
+    <section class="tables-section">
+      <h2 class="mt-5">📊 Interactive Data Tables</h2>
+
+      <!-- 用户信息表 -->
+      <div class="card mb-5 p-3 shadow-sm">
+        <h4 class="mb-3">User Information</h4>
+        <table id="userTable" class="table table-striped table-bordered" style="width:100%">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Age</th>
+            </tr>
+          </thead>
+          <tfoot>
+            <tr>
+              <th><input type="text" placeholder="Search name" /></th>
+              <th><input type="text" placeholder="Search email" /></th>
+              <th><input type="text" placeholder="Search age" /></th>
+            </tr>
+          </tfoot>
+          <tbody>
+            <tr v-for="(user, index) in users" :key="index">
+              <td>{{ user.name }}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.age }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 产品信息表 -->
+      <div class="card p-3 shadow-sm">
+        <h4 class="mb-3">Product List</h4>
+        <table id="productTable" class="table table-striped table-bordered" style="width:100%">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Category</th>
+              <th>Price ($)</th>
+            </tr>
+          </thead>
+          <tfoot>
+            <tr>
+              <th><input type="text" placeholder="Search product" /></th>
+              <th><input type="text" placeholder="Search category" /></th>
+              <th><input type="text" placeholder="Search price" /></th>
+            </tr>
+          </tfoot>
+          <tbody>
+            <tr v-for="(item, index) in products" :key="index">
+              <td>{{ item.product }}</td>
+              <td>{{ item.category }}</td>
+              <td>{{ item.price }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </div>
 </template>
 
 <script>
+import 'datatables.net-dt/css/dataTables.dataTables.css'
+import $ from 'jquery'
+import 'datatables.net-dt'
+
+
 export default {
   data() {
     return {
       email: "",
       message: "",
       sending: false,
-      // 允许发送的 Mailgun Sandbox 授权邮箱列表
       authorizedEmails: [
         "wangjun6666666633@gmail.com",
         "kche0224@student.monash.edu"
+      ],
+      // 模拟用户数据
+      users: [
+        { name: 'Alice Johnson', email: 'alice@example.com', age: 25 },
+        { name: 'Bob Smith', email: 'bob@example.com', age: 30 },
+        { name: 'Carol Lee', email: 'carol@example.com', age: 28 },
+        { name: 'Daniel Wong', email: 'daniel@example.com', age: 35 },
+        { name: 'Emily Davis', email: 'emily@example.com', age: 22 },
+        { name: 'Frank Zhang', email: 'frank@example.com', age: 27 },
+        { name: 'Grace Tan', email: 'grace@example.com', age: 24 },
+        { name: 'Henry Liu', email: 'henry@example.com', age: 33 },
+        { name: 'Irene Chen', email: 'irene@example.com', age: 29 },
+        { name: 'Jack Lee', email: 'jack@example.com', age: 31 },
+        { name: 'Kelly Lin', email: 'kelly@example.com', age: 26 }
+      ],
+      // 模拟产品数据
+      products: [
+        { product: 'Camera A200', category: 'Electronics', price: 350 },
+        { product: 'Running Shoes', category: 'Sportswear', price: 120 },
+        { product: 'Smart Watch', category: 'Electronics', price: 199 },
+        { product: 'Coffee Beans', category: 'Groceries', price: 25 },
+        { product: 'Bluetooth Speaker', category: 'Electronics', price: 89 },
+        { product: 'Desk Lamp', category: 'Home', price: 49 },
+        { product: 'Office Chair', category: 'Furniture', price: 240 },
+        { product: 'Yoga Mat', category: 'Sportswear', price: 35 },
+        { product: 'Water Bottle', category: 'Accessories', price: 15 },
+        { product: 'Notebook', category: 'Stationery', price: 6 },
+        { product: 'Backpack', category: 'Accessories', price: 55 }
       ]
     };
+  },
+  mounted() {
+    // 初始化表格
+    this.initTable('#userTable');
+    this.initTable('#productTable');
   },
   methods: {
     async sendEmail() {
       if (!this.email || !this.message) return;
 
-      // 🔒 检查邮箱是否在授权列表
       if (!this.authorizedEmails.includes(this.email)) {
         alert(`⚠️ The email "${this.email}" is not authorized in the Mailgun Sandbox.`);
         return;
       }
 
       this.sending = true;
-
       try {
         const response = await fetch("http://127.0.0.1:5001/week7-kaichen/us-central1/api/sendEmail", {
           method: "POST",
@@ -63,7 +164,6 @@ export default {
         });
 
         const result = await response.json();
-
         if (response.ok && result.success) {
           alert("✅ Email sent successfully!");
           this.email = "";
@@ -78,13 +178,36 @@ export default {
         this.sending = false;
       }
     },
-  },
+
+    // 初始化 DataTables + 列搜索功能
+    initTable(selector) {
+      const table = $(selector).DataTable({
+        pageLength: 10,
+        lengthChange: false,
+        ordering: true,
+        searching: true,
+        language: {
+          search: 'Global Search:'
+        }
+      });
+
+      // 为每列单独搜索
+      table.columns().every(function () {
+        const column = this;
+        $('input', this.footer()).on('keyup change clear', function () {
+          if (column.search() !== this.value) {
+            column.search(this.value).draw();
+          }
+        });
+      });
+    }
+  }
 };
 </script>
 
 <style scoped>
 .about {
-  max-width: 600px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 20px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -137,5 +260,25 @@ button:hover:not(:disabled) {
   background-color: #2563eb;
   transform: translateY(-1px);
 }
-</style>
 
+/* 表格样式 */
+.tables-section {
+  margin-top: 60px;
+}
+
+.card {
+  border-radius: 12px;
+}
+
+table.dataTable tfoot th {
+  padding: 5px 8px;
+}
+
+table.dataTable tfoot input {
+  width: 100%;
+  padding: 4px;
+  box-sizing: border-box;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+</style>

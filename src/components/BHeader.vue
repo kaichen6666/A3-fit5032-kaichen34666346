@@ -62,6 +62,12 @@
   
 </li>
 
+<li class="nav-item">
+          <router-link to="/GeoMap" class="nav-link" active-class="active">
+            Map
+          </router-link>
+        </li>
+
       </ul>
     </header>
   </div>
