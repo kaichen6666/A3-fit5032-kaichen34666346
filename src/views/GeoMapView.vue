@@ -32,7 +32,9 @@ export default {
   },
   mounted() {
     // 1️⃣ Mapbox Token
-    mapboxgl.accessToken = "pk.eyJ1Ijoia2FpZml0NTAzMiIsImEiOiJjbWdvazV2ZTkwcHZlMmtwa2FwNjB2eXp4In0.bx5OjDJ0V3zG8aCCwldPuw";
+    mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
+
+    //mapboxgl.accessToken = "pk.eyJ1Ijoia2FpZml0NTAzMiIsImEiOiJjbWdva3JlaGUyNzgwMmtuMnpvNzl6ZmF6In0.0J5z91B9u0Kt0v7J4zvVgQ";
 
     // 2️⃣ 初始化地图
     this.map = new mapboxgl.Map({

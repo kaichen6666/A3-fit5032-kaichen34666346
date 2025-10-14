@@ -10,7 +10,16 @@
       <p class="text-gray-700 max-w-2xl mx-auto mb-10 text-lg leading-relaxed">
         Promoting healthier lives through education, awareness, and community engagement.
       </p>
-      <img src="@/assets/heroner.webp" alt="Healthy nutrition" class="mx-auto rounded-2xl shadow-xl w-full max-w-3xl" />
+
+      <!-- BR (E.3): Accessibility 1.dded alt text to all images for screen readers.-->
+      <img 
+        src="@/assets/heroner.webp" 
+        alt="Healthy nutrition — promoting balanced diet awareness" 
+        class="mx-auto rounded-2xl shadow-xl w-full max-w-3xl"
+        role="img"
+        aria-label="Image of healthy nutrition promoting balanced diet awareness"
+      />
+      
     </section>
 
 
@@ -43,17 +52,38 @@
         <h2 class="text-3xl font-bold text-green-700 mb-6">Our Programs</h2>
         <ul class="grid md:grid-cols-3 gap-6 text-left">
           <li class="bg-white rounded-2xl p-6 shadow-md">
-            <img src="@/assets/2.webp" alt="Program" class="rounded-xl mb-3" />
+            <!-- BR (E.3): Accessibility 1.dded alt text to all images for screen readers.-->
+            <img
+              src="@/assets/2.webp"
+              alt="Application interface showing a data visualization program"
+              class="rounded-xl mb-3 shadow-lg"
+              role="img"
+              aria-label="Application interface showing a data visualization program"
+            />
             <h3 class="font-semibold text-green-700 mb-2">School Workshops</h3>
             <p class="text-gray-600">Interactive sessions teaching kids about healthy eating.</p>
           </li>
           <li class="bg-white rounded-2xl p-6 shadow-md">
-            <img src="@/assets/3.webp" alt="Program" class="rounded-xl mb-3" />
+            <!-- BR (E.3): Accessibility 1.dded alt text to all images for screen readers.-->
+            <img
+              src="@/assets/3.webp"
+              alt="User registration interface demonstrating account creation"
+              class="rounded-xl mb-3 shadow-lg"
+              role="img"
+              aria-label="User registration interface demonstrating account creation"
+            />
             <h3 class="font-semibold text-green-700 mb-2">Community Cooking</h3>
             <p class="text-gray-600">Hands-on cooking classes for families to learn nutritious recipes.</p>
           </li>
           <li class="bg-white rounded-2xl p-6 shadow-md">
-            <img src="@/assets/4.webp" alt="Program" class="rounded-xl mb-3" />
+            <!-- BR (E.3): Accessibility 1.dded alt text to all images for screen readers.-->
+            <img
+              src="@/assets/4.webp"
+              alt="Interactive map interface displaying user location and nearby points of interest"
+              class="rounded-xl mb-3 shadow-lg"
+              role="img"
+              aria-label="Interactive map interface displaying user location and nearby points of interest"
+            />
             <h3 class="font-semibold text-green-700 mb-2">Online Courses</h3>
             <p class="text-gray-600">Virtual lessons on nutrition, meal planning, and lifestyle tips.</p>
           </li>
@@ -62,72 +92,91 @@
     </section>
 
 
-
-
-    <!-- Contact Form -->
-<section id="contact" class="py-16 px-6 bg-green-50">
-  <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-start md:items-center gap-12">
-    <!-- Info Column -->
-    <div class="md:w-1/2 text-center md:text-left">
-      <h2 class="text-3xl font-bold text-green-700 mb-4">Join Our Mission</h2>
-      <p class="text-gray-700 mb-6">
-        Have a question, want to collaborate, or learn more about our programs? Reach out to us!
-      </p>
-      <p class="text-gray-700 font-semibold">📧 info@publichealthnutrition.org</p>
-    </div>
-
-    <!-- Form Column -->
-    <form @submit.prevent="handleSubmit" class="md:w-1/2 bg-white p-8 rounded-2xl shadow-md border border-green-100 flex flex-col gap-4">
-      <input 
-        v-model="form.name" 
-        type="text" 
-        placeholder="Full Name" 
-        required 
-        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-400" 
-      />
-      <input 
-        v-model="form.email" 
-        type="email" 
-        placeholder="Email" 
-        required 
-        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-400" 
-      />
-      <textarea 
-        v-model="form.message" 
-        rows="5" 
-        placeholder="Message..." 
-        required 
-        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-400"
-      ></textarea>
-      <button 
-        type="submit" 
-        class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold mt-2"
-      >
-        Send Message
-      </button>
-    </form>
-  </div>
-</section>
-
 <!-- Health Quiz -->
-<section id="quiz" class="py-16 px-6 bg-white text-center">
-  <h2 class="text-3xl font-bold text-green-700 mb-4">Are You Eating Healthy?</h2>
-  <p class="text-gray-600 mb-6">Answer a quick question to find out!</p>
+<section
+  id="quiz"
+  class="py-16 px-6 bg-white text-center"
+  aria-labelledby="quiz-title"
+  role="region"
+>
+  <h2 id="quiz-title" class="text-3xl font-bold text-green-700 mb-4">
+    Are You Eating Healthy?
+  </h2>
+  <p class="text-gray-600 mb-6">
+    Answer a quick question to find out!
+  </p>
 
+  <!-- Quiz question -->
   <div v-if="!quizAnswered">
-    <p class="text-lg mb-4">How many servings of vegetables do you eat daily?</p>
-    <div class="flex justify-center gap-4">
-      <button @click="handleQuizAnswer(0)" class="px-4 py-2 bg-green-100 rounded-lg hover:bg-green-200">0-1</button>
-      <button @click="handleQuizAnswer(1)" class="px-4 py-2 bg-green-100 rounded-lg hover:bg-green-200">2-3</button>
-      <button @click="handleQuizAnswer(2)" class="px-4 py-2 bg-green-100 rounded-lg hover:bg-green-200">4+</button>
-    </div>
+    <p class="text-lg mb-4" id="quiz-question">
+      How many servings of vegetables do you eat daily?
+    </p>
+
+    <div
+  class="flex justify-center gap-4"
+  role="radiogroup"
+  aria-labelledby="quiz-question"
+>
+  <button
+    @click="handleQuizAnswer(0)"
+    :aria-checked="selectedAnswer === 0 ? 'true' : 'false'"
+    :class="[
+      'px-4 py-2 rounded-lg transition-all font-semibold',
+      selectedAnswer === 0
+        ? 'bg-green-400 text-black border-4 border-green-700'  /* 选中更亮，字体黑色 */
+        : 'bg-green-200 text-green-900 hover:bg-green-300 focus:bg-green-300 focus:text-black focus:border-4 focus:border-green-500'
+    ]"
+    role="radio"
+    tabindex="0"
+  >
+    0–1
+  </button>
+
+  <button
+    @click="handleQuizAnswer(1)"
+    :aria-checked="selectedAnswer === 1 ? 'true' : 'false'"
+    :class="[
+      'px-4 py-2 rounded-lg transition-all font-semibold',
+      selectedAnswer === 1
+        ? 'bg-green-400 text-black border-4 border-green-700'
+        : 'bg-green-200 text-green-900 hover:bg-green-300 focus:bg-green-300 focus:text-black focus:border-4 focus:border-green-500'
+    ]"
+    role="radio"
+    tabindex="0"
+  >
+    2–3
+  </button>
+
+  <button
+    @click="handleQuizAnswer(2)"
+    :aria-checked="selectedAnswer === 2 ? 'true' : 'false'"
+    :class="[
+      'px-4 py-2 rounded-lg transition-all font-semibold',
+      selectedAnswer === 2
+        ? 'bg-green-400 text-black border-4 border-green-700'
+        : 'bg-green-200 text-green-900 hover:bg-green-300 focus:bg-green-300 focus:text-black focus:border-4 focus:border-green-500'
+    ]"
+    role="radio"
+    tabindex="0"
+  >
+    4+
+  </button>
+</div>
   </div>
 
-  <div v-else class="mt-6">
+  <!-- Quiz result -->
+  <div v-else class="mt-6" role="status" aria-live="polite">
     <p class="text-lg font-semibold text-green-700">{{ quizResult }}</p>
-    <button @click="resetQuiz" class="mt-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">Try Again</button>
+    <button
+      @click="resetQuiz"
+      class="mt-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 
+             focus:outline-none focus:ring-4 focus:ring-green-400 focus:ring-offset-2"
+    >
+      Try Again
+    </button>
   </div>
 </section>
+
 
 
 <!--  -->
@@ -139,6 +188,7 @@
     </li>
   </ul>
 </section>
+
 
 
 
@@ -161,7 +211,8 @@ export default {
       form: { name: "", email: "", message: "" },
       quizAnswered: false,
       quizResult: "",
-      // 健康小贴士
+      selectedAnswer: null, // ✅ 当前选中的答案索引，用于 aria-checked
+      // ✅ 健康小贴士
       allTips: [
         "Drink at least 8 glasses of water daily 💧",
         "Add more greens to your meals 🥬",
@@ -173,27 +224,36 @@ export default {
     };
   },
   mounted() {
-    // 页面加载时随机取三条小贴士
+    // ✅ 页面加载时随机取三条小贴士
     this.randomTips = this.allTips.sort(() => 0.5 - Math.random()).slice(0, 3);
   },
   methods: {
+    // ✅ 表单提交逻辑
     handleSubmit() {
       alert(`✅ Thank you, ${this.form.name}! Your message has been sent.`);
       console.log("Form submitted:", this.form);
       this.form = { name: "", email: "", message: "" };
     },
-    handleQuizAnswer(option) {
+
+    // ✅ 健康测验逻辑（包含可访问性支持）
+    handleQuizAnswer(answer) {
+      this.selectedAnswer = answer; // 设置选中状态
       this.quizAnswered = true;
-      if (option === 0)
+
+      if (answer === 0)
         this.quizResult = "Try to include more vegetables in your diet 🌿";
-      if (option === 1)
+      else if (answer === 1)
         this.quizResult = "Good! You're on the right track 🥦";
-      if (option === 2)
-        this.quizResult = "Excellent! Keep maintaining your healthy habits 🥗";
+      else
+        this.quizResult =
+          "Excellent! Keep maintaining your healthy habits 🥗";
     },
+
+    // ✅ 重置测验
     resetQuiz() {
       this.quizAnswered = false;
       this.quizResult = "";
+      this.selectedAnswer = null;
     },
   },
 };

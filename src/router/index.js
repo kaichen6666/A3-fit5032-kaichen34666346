@@ -5,10 +5,9 @@ import Form from '../components/Form.vue'
 import FirebaseSigninView from '@/views/FirebaseSigninView.vue'
 import WeatherView from '../views/WeatherView.vue'
 import GeoMapView from "@/views/GeoMapView.vue";
-
-
 import AddBookView from "../views/AddBookView.vue"
 import ManageBooksView from "../views/ManageBooksView.vue"
+import CalendarView from "../views/CalendarView.vue"
 
 const routes = [
   {
@@ -42,11 +41,20 @@ const routes = [
   name: "WeatherCheck",
   component: WeatherView
 },
-{ path: "/managebooks", name: "ManageBooks", component: ManageBooksView },
+{ path: 
+  "/managebooks", 
+  name: "ManageBooks", 
+  component: ManageBooksView 
+},
   {
     path: '/GeoMap',
     name: 'GeoMap',
     component: GeoMapView
+  },
+  { 
+    path: '/calendar', 
+    name: 'Calendar', 
+    component: CalendarView 
   }
   
 ]
