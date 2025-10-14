@@ -1,25 +1,16 @@
-// server.js
-
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
 import admin from "firebase-admin";
 
-// ES Module 获取 __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// 🔹 指定本地 Emulator host
+// 🔹 指定 Firestore Emulator IPv4 地址
+process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080";
 
-// 读取 JSON 文件
-const serviceAccount = JSON.parse(
-  fs.readFileSync(path.join(__dirname, "serviceAccountKey.json"), "utf-8")
-);
-
-// 初始化 Firebase
+// 🔹 初始化 Admin SDK，并指定 projectId
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+  projectId: "week7-kaichen"  // 这里写你 Firebase 项目 ID
 });
 
 const db = admin.firestore();
+
 
 
 import express from "express";
