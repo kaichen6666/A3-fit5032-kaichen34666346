@@ -1,21 +1,42 @@
 import admin from "firebase-admin";
-
-// 🔹 指定本地 Emulator host
-// 🔹 指定 Firestore Emulator IPv4 地址
-process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080";
-
-// 🔹 初始化 Admin SDK，并指定 projectId
-admin.initializeApp({
-  projectId: "week7-kaichen"  // 这里写你 Firebase 项目 ID
-});
-
-const db = admin.firestore();
-
-
-
 import express from "express";
 import cors from "cors";
 import Mailgun from "mailgun-js";
+
+import fs from "fs";
+import path from "path";
+//import admin from "firebase-admin";
+import { fileURLToPath } from "url";
+
+
+// 获取 __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// 读取服务账号 JSON 文件
+const serviceAccount = JSON.parse(
+  fs.readFileSync(path.join(__dirname, "serviceAccountKey.json"), "utf-8")
+);
+
+// 初始化 Firebase Admin SDK
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
+// 获取 Firestore 实例
+const db = admin.firestore();
+
+
+// 测试输出 Firestore collection
+(async () => {
+  try {
+    const snapshot = await db.collection("events").get();
+    console.log("✅ Firestore connected, events count:", snapshot.size);
+  } catch (err) {
+    console.error("❌ Firestore connection failed:", err);
+  }
+})();
+
 
 
 const app = express();
@@ -80,7 +101,10 @@ app.get("/api/events", async (req, res) => {
   try {
     const snapshot = await db.collection("events").get();
     const events = [];
-    snapshot.forEach(doc => events.push({ id: doc.id, ...doc.data() }));
+    snapshot.forEach(doc => {
+      console.log("📄 Firestore document:", doc.data()); // ← 打印每条数据
+      events.push({ id: doc.id, ...doc.data() });
+    });
     res.json({ success: true, events });
   } catch (err) {
     console.error("❌ Firestore Error:", err);
