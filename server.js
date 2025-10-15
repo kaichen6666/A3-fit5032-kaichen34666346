@@ -1,33 +1,40 @@
+// ===============================
+// Import Required Modules
+// ===============================
+import "dotenv/config";
 import admin from "firebase-admin";
 import express from "express";
 import cors from "cors";
 import Mailgun from "mailgun-js";
-
 import fs from "fs";
 import path from "path";
-//import admin from "firebase-admin";
 import { fileURLToPath } from "url";
 
 
-// 获取 __dirname
+// ===============================
+// Setup __dirname
+// ===============================
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 读取服务账号 JSON 文件
+// ===============================
+// Initialize Firebase Admin SDK
+// ===============================
+
+// Read service account key JSON
 const serviceAccount = JSON.parse(
   fs.readFileSync(path.join(__dirname, "serviceAccountKey.json"), "utf-8")
 );
 
-// 初始化 Firebase Admin SDK
+// Initialize Firebase Admin
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
 
-// 获取 Firestore 实例
+// Get Firestore instance
 const db = admin.firestore();
 
-
-// 测试输出 Firestore collection
+// Test Firestore connection
 (async () => {
   try {
     const snapshot = await db.collection("events").get();
@@ -37,45 +44,54 @@ const db = admin.firestore();
   }
 })();
 
-
-
+// ===============================
+// Setup Express App
+// ===============================
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ===============================
+// Mailgun Configuration
+// ===============================
+// Mailgun configuration using environment variables
+const apiKey = process.env.MAILGUN_API_KEY;
+const domain = process.env.MAILGUN_DOMAIN;
 
-// Mailgun 配置信息
-const apiKey = "2a599128f11fe3914e9658d1d718ebfb-556e0aa9-e075245c";
-const domain = "sandboxa48cd105f28c4f5e8930fa277d687237.mailgun.org";
+// simple runtime check to help debugging
+if (!apiKey || !domain) {
+  console.error("❌ Mailgun config missing. Set MAILGUN_API_KEY and MAILGUN_DOMAIN in environment.");
+  // optional: process.exit(1);
+}
+
 const mailgun = Mailgun({ apiKey, domain });
 
 
-// ✅ 授权邮箱列表（必须在 Mailgun Sandbox 里授权过）
+// Authorized email addresses (must be verified in Mailgun Sandbox)
 const authorizedEmails = [
   "wangjun6666666633@gmail.com",
   "kche0224@student.monash.edu"
 ];
 
-
-// 邮件接口
+// ===============================
+// POST /send-email
+// Send an email via Mailgun
+// ===============================
 app.post("/send-email", async (req, res) => {
   const { email, message } = req.body;
 
-
-  // 检查字段
+  // Validate fields
   if (!email || !message) {
     return res.status(400).json({ success: false, error: "Missing fields" });
   }
 
-
-  // 🔒 检查是否在授权列表
+  // Check if email is authorized
   if (!authorizedEmails.includes(email)) {
     return res.status(403).json({
       success: false,
       error: `The email "${email}" is not authorized in the Mailgun Sandbox.`
     });
   }
-
 
   const data = {
     from: `Mailgun Sandbox <postmaster@${domain}>`,
@@ -84,7 +100,7 @@ app.post("/send-email", async (req, res) => {
     text: message,
   };
 
-
+  // Send email through Mailgun
   mailgun.messages().send(data, (error, body) => {
     if (error) {
       console.error("❌ Mailgun Error:", error);
@@ -96,15 +112,20 @@ app.post("/send-email", async (req, res) => {
   });
 });
 
-// GET 所有预约事件
+// ===============================
+// GET /api/events
+// Get all events from Firestore
+// ===============================
 app.get("/api/events", async (req, res) => {
   try {
     const snapshot = await db.collection("events").get();
     const events = [];
+
     snapshot.forEach(doc => {
-      console.log("📄 Firestore document:", doc.data()); // ← 打印每条数据
+      console.log("📄 Firestore document:", doc.data());
       events.push({ id: doc.id, ...doc.data() });
     });
+
     res.json({ success: true, events });
   } catch (err) {
     console.error("❌ Firestore Error:", err);
@@ -112,13 +133,21 @@ app.get("/api/events", async (req, res) => {
   }
 });
 
-// GET 指定邮箱的预约事件
+// ===============================
+// GET /api/events/:email
+// Get all events by a specific user
+// ===============================
 app.get("/api/events/:email", async (req, res) => {
   try {
     const email = req.params.email;
-    const snapshot = await db.collection("events").where("createdBy", "==", email).get();
+    const snapshot = await db
+      .collection("events")
+      .where("createdBy", "==", email)
+      .get();
+
     const events = [];
     snapshot.forEach(doc => events.push({ id: doc.id, ...doc.data() }));
+
     res.json({ success: true, events });
   } catch (err) {
     console.error("❌ Firestore Error:", err);
@@ -126,16 +155,18 @@ app.get("/api/events/:email", async (req, res) => {
   }
 });
 
-
-
-
-
+// ===============================
+// POST /events
+// Add a new event to Firestore
+// ===============================
 app.post("/events", async (req, res) => {
   const { title, start, remindAt, createdBy, notes } = req.body;
 
-  // 检查字段
+  // Validate fields
   if (!title || !start || !remindAt || !createdBy) {
-    return res.status(400).json({ success: false, error: "Missing required fields" });
+    return res
+      .status(400)
+      .json({ success: false, error: "Missing required fields" });
   }
 
   const newEvent = {
@@ -155,10 +186,9 @@ app.post("/events", async (req, res) => {
   }
 });
 
-
-// 启动服务器
+// ===============================
+// Start Express Server
+// ===============================
 app.listen(3000, () => {
   console.log("✅ Server running on http://localhost:3000");
 });
-
-
