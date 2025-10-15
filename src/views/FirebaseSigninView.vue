@@ -2,6 +2,16 @@
   <div class="container mt-5">
     <h1 class="mb-4">Login</h1>
 
+    <!-- Google Sign-In button -->
+    <div class="text-center mb-3" v-if="!currentUser">
+      <button class="btn btn-danger" @click="googleLogin">
+        <i class="bi bi-google me-2"></i> Sign in with Google
+      </button>
+    </div>
+
+    <hr />
+
+    <!-- Email/Password login form (only shown when user is not signed in) -->
     <form v-if="!currentUser" @submit.prevent="login">
       <div class="mb-3">
         <input
@@ -31,7 +41,8 @@
       </div>
     </form>
 
-    <div v-else class="mt-3">
+    <!-- Show current user info if logged in -->
+    <div v-else class="mt-3 text-center">
       <p>Current User: {{ currentUser.email }}</p>
       <p>User Role: {{ currentUserRole }}</p>
       <button class="btn btn-warning" @click="logout">Logout</button>
@@ -41,25 +52,43 @@
 
 <script setup>
 import { ref } from "vue"
-import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth"
-import { doc, getDoc } from "firebase/firestore"
+import {
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithEmailAndPassword,
+  onAuthStateChanged
+} from "firebase/auth"
+import { doc, getDoc, setDoc } from "firebase/firestore"
 import { auth, db } from "../main.js"
 
-const email = ref("")
-const password = ref("")
-const currentUser = ref(null)
-const currentUserRole = ref("")
-const errorMessage = ref("")
+// -------------------------
+// Reactive variables
+// -------------------------
+const email = ref("")               // User email input
+const password = ref("")            // User password input
+const currentUser = ref(null)       // Currently signed-in user
+const currentUserRole = ref("")     // Role of the signed-in user
+const errorMessage = ref("")        // Error message for login failure
 
-// Track current signed-in user
+// -------------------------
+// Monitor authentication state
+// -------------------------
 onAuthStateChanged(auth, async (user) => {
   currentUser.value = user
   if (user) {
-    // Get role from Firestore
+    // Fetch user role from Firestore (or set default role)
     const docSnap = await getDoc(doc(db, "users", user.uid))
     if (docSnap.exists()) {
       currentUserRole.value = docSnap.data().role
       console.log("Logged in user role:", currentUserRole.value)
+    } else {
+      // If new user logs in via Google, set default role
+      await setDoc(doc(db, "users", user.uid), {
+        email: user.email,
+        role: "user"
+      })
+      currentUserRole.value = "user"
+      console.log("New Google user added to Firestore")
     }
     console.log("Current signed-in user:", user.email)
   } else {
@@ -68,6 +97,9 @@ onAuthStateChanged(auth, async (user) => {
   }
 })
 
+// -------------------------
+// Email/Password Login
+// -------------------------
 const login = async () => {
   try {
     const userCredential = await signInWithEmailAndPassword(
@@ -75,8 +107,6 @@ const login = async () => {
       email.value,
       password.value
     )
-
-    // Role is fetched automatically by onAuthStateChanged
     console.log("Firebase Login Successful!", userCredential)
     alert(`Welcome back, ${userCredential.user.email}! Role: ${currentUserRole.value}`)
     email.value = ""
@@ -87,6 +117,36 @@ const login = async () => {
   }
 }
 
+// -------------------------
+// Google Login (External Authentication)
+// -------------------------
+const googleLogin = async () => {
+  const provider = new GoogleAuthProvider()
+  try {
+    const result = await signInWithPopup(auth, provider)
+    const user = result.user
+
+    // Check if user exists in Firestore, otherwise create new record
+    const userDoc = doc(db, "users", user.uid)
+    const docSnap = await getDoc(userDoc)
+    if (!docSnap.exists()) {
+      await setDoc(userDoc, {
+        email: user.email,
+        role: "user" // Default role for new Google users
+      })
+    }
+
+    alert(`Welcome, ${user.displayName || user.email}!`)
+    console.log("Google Sign-In Successful:", user.email)
+  } catch (error) {
+    console.error("Google Sign-In Failed:", error)
+    alert(`Google login failed: ${error.message}`)
+  }
+}
+
+// -------------------------
+// Logout current user
+// -------------------------
 const logout = () => {
   auth.signOut().then(() => {
     currentUser.value = null
@@ -95,6 +155,9 @@ const logout = () => {
   })
 }
 
+// -------------------------
+// Clear email/password fields
+// -------------------------
 const clearForm = () => {
   email.value = ""
   password.value = ""
