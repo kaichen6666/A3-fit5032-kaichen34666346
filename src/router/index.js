@@ -8,6 +8,8 @@ import GeoMapView from "@/views/GeoMapView.vue";
 import AddBookView from "../views/AddBookView.vue"
 import ManageBooksView from "../views/ManageBooksView.vue"
 import CalendarView from "../views/CalendarView.vue"
+import EmailView from '../views/EmailView.vue';
+
 
 const routes = [
   {
@@ -55,7 +57,14 @@ const routes = [
     path: '/calendar', 
     name: 'Calendar', 
     component: CalendarView 
-  }
+  },
+  
+  {
+  path: '/Email',
+  name: 'Email',
+  component: EmailView
+}
+
   
 ]
 

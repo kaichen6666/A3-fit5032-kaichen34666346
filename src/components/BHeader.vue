@@ -61,6 +61,12 @@
           </router-link>
         </li>
 
+        <li class="nav-item">
+  <router-link to="/Email" class="nav-link" active-class="active">
+    Email
+  </router-link>
+</li>
+
       </ul>
     </header>
   </div>

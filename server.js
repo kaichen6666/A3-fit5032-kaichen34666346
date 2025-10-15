@@ -1,194 +1,93 @@
-// ===============================
-// Import Required Modules
-// ===============================
-import "dotenv/config";
-import admin from "firebase-admin";
+// server.js
 import express from "express";
 import cors from "cors";
-import Mailgun from "mailgun-js";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+import fileUpload from "express-fileupload";
+import AWS from "aws-sdk";
+import dotenv from "dotenv";
 
+dotenv.config();
 
-// ===============================
-// Setup __dirname
-// ===============================
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// ===============================
-// Initialize Firebase Admin SDK
-// ===============================
-
-// Read service account key JSON
-const serviceAccount = JSON.parse(
-  fs.readFileSync(path.join(__dirname, "serviceAccountKey.json"), "utf-8")
-);
-
-// Initialize Firebase Admin
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
-
-// Get Firestore instance
-const db = admin.firestore();
-
-// Test Firestore connection
-(async () => {
-  try {
-    const snapshot = await db.collection("events").get();
-    console.log("✅ Firestore connected, events count:", snapshot.size);
-  } catch (err) {
-    console.error("❌ Firestore connection failed:", err);
-  }
-})();
-
-// ===============================
-// Setup Express App
-// ===============================
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(fileUpload());
 
-// ===============================
-// Mailgun Configuration
-// ===============================
-// Mailgun configuration using environment variables
-const apiKey = process.env.MAILGUN_API_KEY;
-const domain = process.env.MAILGUN_DOMAIN;
+// Configure AWS SES v2
+AWS.config.update({
+  region: process.env.AWS_REGION,
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+});
 
-// simple runtime check to help debugging
-if (!apiKey || !domain) {
-  console.error("❌ Mailgun config missing. Set MAILGUN_API_KEY and MAILGUN_DOMAIN in environment.");
-  // optional: process.exit(1);
-}
+const ses = new AWS.SES({ apiVersion: "2010-12-01" });
 
-const mailgun = Mailgun({ apiKey, domain });
-
-
-// Authorized email addresses (must be verified in Mailgun Sandbox)
-const authorizedEmails = [
-  "wangjun6666666633@gmail.com",
-  "kche0224@student.monash.edu"
-];
-
-// ===============================
-// POST /send-email
-// Send an email via Mailgun
-// ===============================
+// POST /send-email: send email with attachment
 app.post("/send-email", async (req, res) => {
-  const { email, message } = req.body;
+  try {
+    const { to, subject, message } = req.body;
+    const file = req.files?.file; // must match frontend input name="file"
 
-  // Validate fields
-  if (!email || !message) {
-    return res.status(400).json({ success: false, error: "Missing fields" });
-  }
-
-  // Check if email is authorized
-  if (!authorizedEmails.includes(email)) {
-    return res.status(403).json({
-      success: false,
-      error: `The email "${email}" is not authorized in the Mailgun Sandbox.`
-    });
-  }
-
-  const data = {
-    from: `Mailgun Sandbox <postmaster@${domain}>`,
-    to: email,
-    subject: "Library Contact Message",
-    text: message,
-  };
-
-  // Send email through Mailgun
-  mailgun.messages().send(data, (error, body) => {
-    if (error) {
-      console.error("❌ Mailgun Error:", error);
-      res.status(500).json({ success: false, error: error.message });
-    } else {
-      console.log("✅ Email sent:", body);
-      res.json({ success: true, body });
+    if (!to || !subject || !message) {
+      return res.status(400).json({
+        success: false,
+        message: "Recipient, subject, and message are required",
+      });
     }
-  });
-});
 
-// ===============================
-// GET /api/events
-// Get all events from Firestore
-// ===============================
-app.get("/api/events", async (req, res) => {
-  try {
-    const snapshot = await db.collection("events").get();
-    const events = [];
+    // Construct raw MIME email
+    const boundary = "NextPart_" + Date.now();
+    const fromEmail = process.env.FROM_EMAIL;
 
-    snapshot.forEach(doc => {
-      console.log("📄 Firestore document:", doc.data());
-      events.push({ id: doc.id, ...doc.data() });
-    });
+    const rawLines = [];
 
-    res.json({ success: true, events });
+    // Email headers
+    rawLines.push(`From: ${fromEmail}`);
+    rawLines.push(`To: ${to}`);
+    rawLines.push(`Subject: ${subject}`);
+    rawLines.push("MIME-Version: 1.0");
+    rawLines.push(`Content-Type: multipart/mixed; boundary="${boundary}"`);
+    rawLines.push("");
+
+    // Text part
+    rawLines.push(`--${boundary}`);
+    rawLines.push("Content-Type: text/plain; charset=UTF-8");
+    rawLines.push("Content-Transfer-Encoding: 7bit");
+    rawLines.push("");
+    rawLines.push(message);
+    rawLines.push("");
+
+    // Attachment part
+    if (file) {
+      const fileBase64 = file.data.toString("base64");
+      rawLines.push(`--${boundary}`);
+      rawLines.push(`Content-Type: ${file.mimetype}; name="${file.name}"`);
+      rawLines.push("Content-Transfer-Encoding: base64");
+      rawLines.push(`Content-Disposition: attachment; filename="${file.name}"`);
+      rawLines.push("");
+
+      // Split base64 into 76-character lines for SES
+      const chunkSize = 76;
+      for (let i = 0; i < fileBase64.length; i += chunkSize) {
+        rawLines.push(fileBase64.slice(i, i + chunkSize));
+      }
+      rawLines.push("");
+    }
+
+    rawLines.push(`--${boundary}--`);
+    rawLines.push("");
+
+    const params = {
+      RawMessage: { Data: rawLines.join("\r\n") },
+      Source: fromEmail,
+    };
+
+    const result = await ses.sendRawEmail(params).promise();
+    res.json({ success: true, messageId: result.MessageId });
   } catch (err) {
-    console.error("❌ Firestore Error:", err);
+    console.error("Error sending email:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// ===============================
-// GET /api/events/:email
-// Get all events by a specific user
-// ===============================
-app.get("/api/events/:email", async (req, res) => {
-  try {
-    const email = req.params.email;
-    const snapshot = await db
-      .collection("events")
-      .where("createdBy", "==", email)
-      .get();
-
-    const events = [];
-    snapshot.forEach(doc => events.push({ id: doc.id, ...doc.data() }));
-
-    res.json({ success: true, events });
-  } catch (err) {
-    console.error("❌ Firestore Error:", err);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// ===============================
-// POST /events
-// Add a new event to Firestore
-// ===============================
-app.post("/events", async (req, res) => {
-  const { title, start, remindAt, createdBy, notes } = req.body;
-
-  // Validate fields
-  if (!title || !start || !remindAt || !createdBy) {
-    return res
-      .status(400)
-      .json({ success: false, error: "Missing required fields" });
-  }
-
-  const newEvent = {
-    title,
-    start,
-    remindAt,
-    createdBy,
-    notes: notes || ""
-  };
-
-  try {
-    const docRef = await db.collection("events").add(newEvent);
-    res.json({ success: true, id: docRef.id, event: newEvent });
-  } catch (error) {
-    console.error("❌ Firestore Error:", error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// ===============================
-// Start Express Server
-// ===============================
-app.listen(3000, () => {
-  console.log("✅ Server running on http://localhost:3000");
-});
+const PORT = 5000;
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
