@@ -19,6 +19,7 @@
           {{ aiLoading ? "Thinking..." : "Ask AI for nutrition advice" }}
         </button>
 
+        
         <!-- Display AI response -->
         <p v-if="aiResponse" class="ai-response">
           🥗 {{ aiResponse }}

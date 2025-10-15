@@ -2,6 +2,7 @@
   <div class="container mt-5">
     <h1 class="mb-4">Login</h1>
 
+    
     <!-- Google Sign-In button -->
     <div class="text-center mb-3" v-if="!currentUser">
       <button class="btn btn-danger" @click="googleLogin">
